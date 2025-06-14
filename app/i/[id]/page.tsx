@@ -54,8 +54,8 @@ export default async function ImagePage({ params }: ImagePageProps) {
   // Increment view count (fire and forget)
   incrementViewCount(params.id)
 
-  // Check if the image is from catbox.moe
-  const isCatboxImage = image.public_url.includes("catbox.moe")
+  // Check if the media is a video
+  const isVideo = image.content_type.startsWith("video/")
 
   return (
     <div className="container py-8">
@@ -72,15 +72,23 @@ export default async function ImagePage({ params }: ImagePageProps) {
           <div className="border overflow-hidden bg-background">
             <div className="relative">
               <div className="aspect-auto max-h-[80vh] flex items-center justify-center bg-black/5">
-                <Image
-                  src={image.public_url || "/placeholder.svg"}
-                  alt={image.title || "Uploaded image"}
-                  width={1200}
-                  height={800}
-                  className="max-h-[80vh] w-auto object-contain"
-                  priority
-                  unoptimized={isCatboxImage}
-                />
+                {isVideo ? (
+                  <video
+                    src={image.public_url}
+                    controls
+                    className="max-h-[80vh] w-auto object-contain"
+                  />
+                ) : (
+                  <Image
+                    src={image.public_url || "/placeholder.svg"}
+                    alt={image.title || "Uploaded image"}
+                    width={1200}
+                    height={800}
+                    className="max-h-[80vh] w-auto object-contain"
+                    priority
+                    unoptimized={true} // Always unoptimized for external Catbox URLs
+                  />
+                )}
               </div>
             </div>
           </div>
