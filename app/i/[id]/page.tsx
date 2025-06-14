@@ -47,6 +47,9 @@ export default async function ImagePage({ params }: ImagePageProps) {
 
   const { data: image } = await supabase.from("images").select("*").eq("id", params.id).single()
 
+  // Add this console log to inspect the entire image object
+  console.log("Image data received in ImagePage:", image);
+
   if (!image) {
     notFound()
   }

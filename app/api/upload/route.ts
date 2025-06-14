@@ -8,23 +8,54 @@ const MAX_FILE_SIZE = 4.5 * 1024 * 1024
 
 // Helper function to get file metadata from a URL using HEAD request
 async function getFileMetadataFromUrl(url: string) {
+  let contentType = 'application/octet-stream';
+  let sizeInBytes = 0;
+
   try {
     const response = await fetch(url, { method: 'HEAD' });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch metadata for ${url}: ${response.statusText}`);
+    if (response.ok) {
+      const headerContentType = response.headers.get('Content-Type');
+      const contentLength = response.headers.get('Content-Length');
+
+      if (headerContentType) {
+        contentType = headerContentType;
+      }
+      if (contentLength) {
+        sizeInBytes = parseInt(contentLength, 10);
+      }
     }
-
-    const contentType = response.headers.get('Content-Type');
-    const contentLength = response.headers.get('Content-Length');
-
-    return {
-      contentType: contentType || 'application/octet-stream',
-      sizeInBytes: contentLength ? parseInt(contentLength, 10) : 0,
-    };
   } catch (error) {
-    console.error("Error fetching file metadata:", error);
-    return null;
+    console.error("Error fetching file metadata via HEAD request:", error);
   }
+
+  // Fallback/refinement: Infer content type from file extension if necessary or more specific
+  const urlParts = url.split('.');
+  const fileExtension = urlParts.length > 1 ? urlParts.pop()?.toLowerCase() : null;
+
+  if (fileExtension) {
+    switch (fileExtension) {
+      case 'mp4':
+      case 'mov':
+      case 'webm':
+        contentType = 'video/' + fileExtension;
+        break;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        contentType = 'image/' + fileExtension;
+        break;
+      default:
+        // Keep original contentType or default
+        break;
+    }
+  }
+
+  return {
+    contentType,
+    sizeInBytes,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -80,10 +111,6 @@ export async function POST(request: NextRequest) {
 
       if (!metadata) {
         return NextResponse.json({ success: false, error: "Failed to get metadata from Catbox URL" }, { status: 500 })
-      }
-
-      if (!metadata.contentType.startsWith("image/") && !metadata.contentType.startsWith("video/")) {
-        return NextResponse.json({ success: false, error: "Invalid file type from URL. Only images and videos are allowed." }, { status: 400 })
       }
 
       storagePath = catboxUrlInput
