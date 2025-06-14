@@ -164,7 +164,7 @@ export function UploadForm() {
       })
 
       // Redirect to the image page
-      router.push(`/i/${data.image.id}`)
+      router.push(`/i/${data.media.id}`)
     } catch (error) {
       console.error("Upload error:", error)
       toast({
@@ -192,52 +192,42 @@ export function UploadForm() {
       return
     }
 
-    if (!manualUrl.includes("catbox.moe")) {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid catbox.moe URL",
-        variant: "destructive",
-      })
-      return
-    }
-
     setIsUploading(true)
 
     try {
-      const response = await fetch("/api/manual-upload", {
+      const formData = new FormData()
+      formData.append("catboxUrl", manualUrl)
+      formData.append("title", title)
+      formData.append("description", description)
+
+      const response = await fetch("/api/upload", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: manualUrl,
-          title,
-          description,
-        }),
+        body: formData,
       })
 
       const data = await response.json()
 
-      if (!response.ok) {
+      if (!response.ok || data.success === false) {
         throw new Error(data.error || "Upload failed")
       }
 
       toast({
-        title: "URL added successfully",
-        description: "Your image has been added to the gallery",
+        title: "URL added to gallery",
+        description: "The Catbox URL has been successfully indexed and added to your gallery.",
       })
 
-      // Redirect to the image page
-      router.push(`/i/${data.image.id}`)
+      // Redirect to the media page
+      router.push(`/i/${data.media.id}`)
     } catch (error) {
-      console.error("Manual upload error:", error)
+      console.error("Manual URL upload error:", error)
       toast({
-        title: "Failed to add URL",
-        description: error instanceof Error ? error.message : "There was an error adding your image",
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "There was an error processing your URL",
         variant: "destructive",
       })
     } finally {
       setIsUploading(false)
+      setManualUrl("") // Clear the URL input after submission
     }
   }
 
