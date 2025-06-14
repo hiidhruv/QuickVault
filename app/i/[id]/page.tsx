@@ -56,6 +56,7 @@ export default async function ImagePage({ params }: ImagePageProps) {
 
   // Check if the media is a video
   const isVideo = image.content_type.startsWith("video/")
+  console.log(`Debug: Image ID: ${image.id}, Content Type: ${image.content_type}, Is Video: ${isVideo}`);
 
   return (
     <div className="container py-8">
