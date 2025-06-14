@@ -112,6 +112,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to save media metadata" }, { status: 500 })
     }
 
+    if (!mediaData) {
+      console.error("Media data is undefined after successful database operation.");
+      return NextResponse.json({ error: "Failed to retrieve uploaded media data" }, { status: 500 });
+    }
+
     return NextResponse.json({ success: true, media: mediaData })
   } catch (error) {
     console.error("Server error:", error)
