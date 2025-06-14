@@ -43,15 +43,19 @@ export async function POST(request: NextRequest) {
     let contentType: string
     let sizeInBytes: number
 
+    if (!file && !catboxUrlInput) {
+      return NextResponse.json({ success: false, error: "No file or Catbox URL provided" }, { status: 400 })
+    }
+
     if (file) {
       // Existing direct file upload to Catbox.moe
       if (!file.type.startsWith("image/")) {
-        return NextResponse.json({ error: "Invalid file type for direct upload. Only images are allowed." }, { status: 400 })
+        return NextResponse.json({ success: false, error: "Invalid file type for direct upload. Only images are allowed." }, { status: 400 })
       }
 
       if (file.size > MAX_FILE_SIZE) {
         return NextResponse.json(
-          { error: "File too large for serverless function. Use direct upload instead." },
+          { success: false, error: "File too large for serverless function. Use direct upload instead." },
           { status: 413 },
         )
       }
@@ -61,7 +65,7 @@ export async function POST(request: NextRequest) {
       const uploadedCatboxUrl = await uploadToCatbox(file)
 
       if (!uploadedCatboxUrl) {
-        return NextResponse.json({ error: "Failed to upload to catbox.moe" }, { status: 500 })
+        return NextResponse.json({ success: false, error: "Failed to upload to catbox.moe" }, { status: 500 })
       }
 
       storagePath = uploadedCatboxUrl
@@ -75,11 +79,11 @@ export async function POST(request: NextRequest) {
       const metadata = await getFileMetadataFromUrl(catboxUrlInput);
 
       if (!metadata) {
-        return NextResponse.json({ error: "Failed to get metadata from Catbox URL" }, { status: 500 })
+        return NextResponse.json({ success: false, error: "Failed to get metadata from Catbox URL" }, { status: 500 })
       }
 
       if (!metadata.contentType.startsWith("image/") && !metadata.contentType.startsWith("video/")) {
-        return NextResponse.json({ error: "Invalid file type from URL. Only images and videos are allowed." }, { status: 400 })
+        return NextResponse.json({ success: false, error: "Invalid file type from URL. Only images and videos are allowed." }, { status: 400 })
       }
 
       storagePath = catboxUrlInput
@@ -89,7 +93,8 @@ export async function POST(request: NextRequest) {
       console.log("Catbox URL processed and masked:", publicUrl)
 
     } else {
-      return NextResponse.json({ error: "No file or Catbox URL provided" }, { status: 400 })
+      // This case should ideally be caught by the initial !file && !catboxUrlInput check, but good for robustness
+      return NextResponse.json({ success: false, error: "No file or Catbox URL provided" }, { status: 400 })
     }
 
     // Save metadata to database
@@ -107,21 +112,26 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
+    console.log("Supabase insert result - data:", mediaData);
+    console.log("Supabase insert result - error:", dbError);
+
     if (dbError) {
       console.error("Database error:", dbError)
-      return NextResponse.json({ error: "Failed to save media metadata" }, { status: 500 })
+      return NextResponse.json({ success: false, error: "Failed to save media metadata" }, { status: 500 })
     }
 
     if (!mediaData) {
       console.error("Media data is undefined after successful database operation.");
-      return NextResponse.json({ error: "Failed to retrieve uploaded media data" }, { status: 500 });
+      return NextResponse.json({ success: false, error: "Failed to retrieve uploaded media data" }, { status: 500 });
     }
-
+    
+    console.log("Returning successful response with media data:", mediaData);
     return NextResponse.json({ success: true, media: mediaData })
   } catch (error) {
     console.error("Server error:", error)
     return NextResponse.json(
       {
+        success: false,
         error: "Internal server error",
         details: error instanceof Error ? error.message : String(error),
       },
