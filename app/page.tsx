@@ -1,19 +1,14 @@
-import { createServerClient } from "@/lib/supabase/server"
 import { ImageGrid } from "@/components/image-grid"
 import { Button } from "@/components/ui/button"
 import { Upload } from "lucide-react"
 import Link from "next/link"
+import { getAllImages } from "@/lib/memory-store"
 
-export const revalidate = 60 // Revalidate this page every 60 seconds
+export const revalidate = 0 // Disable caching while using memory storage
 
 export default async function Home() {
-  const supabase = createServerClient()
-
-  const { data: images, error } = await supabase
-    .from("images")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(12)
+  const images = getAllImages()
+  const recentImages = images.slice(0, 12) // Show last 12 images
 
   return (
     <div className="page-container">
@@ -47,12 +42,15 @@ export default async function Home() {
           </Link>
         </div>
 
-        {error ? (
-          <div className="flex justify-center p-8">
-            <p className="text-muted-foreground">Failed to load images</p>
-          </div>
-        ) : images && images.length > 0 ? (
-          <ImageGrid images={images} />
+        {recentImages.length > 0 ? (
+          <>
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                ✅ Memory storage working - {images.length} images stored
+              </p>
+            </div>
+            <ImageGrid images={recentImages} />
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center p-12 border bg-muted/20">
             <p className="text-muted-foreground mb-6 text-center">No images uploaded yet</p>

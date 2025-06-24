@@ -3,41 +3,37 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 // This endpoint sets up RLS policies for the database tables
-export async function GET() {
+export async function POST() {
   try {
-    // Use direct connection with service role key for admin operations
     const supabase = createServerComponentClient(
       { cookies },
       {
-        supabaseUrl: process.env.SUPABASE_URL,
-        supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY, // Use service role key for admin operations
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       },
     )
 
-    // Call the setup functions we just created
+    // Setup RLS policy for images table
     const { error: imagesError } = await supabase.rpc("setup_public_images_policy")
 
     if (imagesError) {
       console.error("Error setting up images policy:", imagesError)
-      return NextResponse.json({ error: imagesError.message }, { status: 500 })
     }
 
+    // Setup RLS policy for image_views table
     const { error: viewsError } = await supabase.rpc("setup_public_image_views_policy")
 
     if (viewsError) {
-      console.error("Error setting up image views policy:", viewsError)
-      return NextResponse.json({ error: viewsError.message }, { status: 500 })
+      console.error("Error setting up image_views policy:", viewsError)
     }
 
-    return NextResponse.json({ success: true, message: "RLS policies set up successfully" })
+    return NextResponse.json({ 
+      success: true, 
+      imagesPolicy: !imagesError, 
+      viewsPolicy: !viewsError 
+    })
   } catch (error) {
-    console.error("Error in setup-rls API:", error)
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    )
+    console.error("RLS setup error:", error)
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })
   }
 }

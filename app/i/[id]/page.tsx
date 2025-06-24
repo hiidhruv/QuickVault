@@ -1,24 +1,20 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import Image from "next/image"
-import { createServerClient } from "@/lib/supabase/server"
-import { ImageActions } from "@/components/image-actions"
 import { formatBytes } from "@/lib/utils"
-import { incrementViewCount } from "@/app/i/[id]/actions"
-import { DeleteButton } from "@/components/delete-button"
 import { Badge } from "@/components/ui/badge"
 import { Tag, Eye, Calendar, FileImage } from "lucide-react"
+import { getImage } from "@/lib/memory-store"
 
 interface ImagePageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export async function generateMetadata({ params }: ImagePageProps): Promise<Metadata> {
-  const supabase = createServerClient()
-
-  const { data: image } = await supabase.from("images").select("*").eq("id", params.id).single()
+  const { id } = await params
+  const image = getImage(id)
 
   if (!image) {
     return {
@@ -45,23 +41,15 @@ export async function generateMetadata({ params }: ImagePageProps): Promise<Meta
 }
 
 export default async function ImagePage({ params }: ImagePageProps) {
-  const supabase = createServerClient()
-
-  const { data: image } = await supabase.from("images").select("*").eq("id", params.id).single()
-
-  // Add this console log to inspect the entire image object
-  console.log("Image data received in ImagePage:", image);
+  const { id } = await params
+  const image = getImage(id)
 
   if (!image) {
     notFound()
   }
 
-  // Increment view count (fire and forget)
-  incrementViewCount(params.id)
-
   // Check if the media is a video
   const isVideo = image.content_type.startsWith("video/")
-  console.log(`Debug: Image ID: ${image.id}, Content Type: ${image.content_type}, Is Video: ${isVideo}`);
 
   return (
     <div className="page-container">
@@ -99,12 +87,10 @@ export default async function ImagePage({ params }: ImagePageProps) {
                   <Calendar className="h-3 w-3 mr-1" />
                   {new Date(image.created_at).toLocaleDateString()}
                 </Badge>
+                <Badge variant="outline" className="bg-green-100 text-green-800">
+                  ✅ Memory Storage
+                </Badge>
               </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3">
-              <ImageActions image={image} />
-              <DeleteButton imageId={image.id} />
             </div>
           </div>
 

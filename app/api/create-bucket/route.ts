@@ -3,58 +3,50 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 // This endpoint creates the necessary storage bucket if it doesn't exist
-export async function GET() {
+export async function POST() {
   try {
-    // Use direct connection with service role key for admin operations
     const supabase = createServerComponentClient(
       { cookies },
       {
-        supabaseUrl: process.env.SUPABASE_URL,
-        supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY, // Use service role key for admin operations
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       },
     )
 
-    // Check if bucket exists
+    // Check if the bucket already exists
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets()
-
+    
     if (bucketsError) {
       console.error("Error listing buckets:", bucketsError)
-      return NextResponse.json({ error: bucketsError.message }, { status: 500 })
+      return NextResponse.json({ success: false, error: "Failed to list buckets" }, { status: 500 })
     }
 
-    const bucketExists = buckets.some((bucket) => bucket.name === "images")
-
-    if (!bucketExists) {
-      // Create the bucket
-      const { data, error: createError } = await supabase.storage.createBucket("images", {
-        public: true,
-        fileSizeLimit: 10485760, // 10MB in bytes
-      })
-
-      if (createError) {
-        console.error("Error creating bucket:", createError)
-        return NextResponse.json({ error: createError.message }, { status: 500 })
-      }
-
-      // Set public bucket policy
-      const { error: policyError } = await supabase.storage.from("images").createSignedUrl("test.txt", 1) // Just to test permissions
-
-      if (policyError && !policyError.message.includes("not found")) {
-        console.error("Error setting bucket policy:", policyError)
-      }
-
-      return NextResponse.json({ success: true, message: "Bucket created successfully", data })
+    const bucketExists = buckets?.some(bucket => bucket.name === "images")
+    
+    if (bucketExists) {
+      return NextResponse.json({ success: true, message: "Bucket already exists" })
     }
 
-    return NextResponse.json({ success: true, message: "Bucket already exists" })
+    // Create the bucket with public access
+    const { data, error: createError } = await supabase.storage.createBucket("images", {
+      public: true,
+    })
+
+    if (createError) {
+      console.error("Error creating bucket:", createError)
+      return NextResponse.json({ success: false, error: "Failed to create bucket" }, { status: 500 })
+    }
+
+    // Test permissions by creating a signed URL
+    const { error: policyError } = await supabase.storage.from("images").createSignedUrl("test.txt", 1) // Just to test permissions
+
+    return NextResponse.json({ 
+      success: true, 
+      bucket: data,
+      permissionsTest: !policyError
+    })
   } catch (error) {
-    console.error("Error in create-bucket API:", error)
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    )
+    console.error("Bucket creation error:", error)
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })
   }
 }

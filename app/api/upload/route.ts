@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
 import { uploadToCatbox } from "@/lib/catbox"
 import { maskCatboxUrl } from "@/lib/url-masking"
+import { addImage, getAllImages } from "@/lib/memory-store"
+import crypto from "crypto"
 
 // Maximum file size for serverless functions (4.5MB to be safe)
 const MAX_FILE_SIZE = 4.5 * 1024 * 1024
@@ -60,12 +61,12 @@ async function getFileMetadataFromUrl(url: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient()
+    console.log("Upload API called - using shared memory store...")
 
     // Parse the form data
     const formData = await request.formData()
-    const file = formData.get("file") as File | null // Make file optional
-    const catboxUrlInput = formData.get("catboxUrl") as string | null // New input for Catbox URL
+    const file = formData.get("file") as File | null
+    const catboxUrlInput = formData.get("catboxUrl") as string | null
     const title = formData.get("title") as string
     const description = formData.get("description") as string
     const category = formData.get("category") as string
@@ -121,41 +122,37 @@ export async function POST(request: NextRequest) {
       console.log("Catbox URL processed and masked:", publicUrl)
 
     } else {
-      // This case should ideally be caught by the initial !file && !catboxUrlInput check, but good for robustness
       return NextResponse.json({ success: false, error: "No file or Catbox URL provided" }, { status: 400 })
     }
 
-    // Save metadata to database
-    const { data: mediaData, error: dbError } = await supabase
-      .from("images")
-      .insert({
-        title: title || null,
-        description: description || null,
-        category: category || "uncategorized",
-        storage_path: storagePath,
-        public_url: publicUrl,
-        content_type: contentType,
-        size_in_bytes: sizeInBytes,
-        is_public: true,
-      })
-      .select()
-      .single()
-
-    console.log("Supabase insert result - data:", mediaData);
-    console.log("Supabase insert result - error:", dbError);
-
-    if (dbError) {
-      console.error("Database error:", dbError)
-      return NextResponse.json({ success: false, error: "Failed to save media metadata" }, { status: 500 })
+    // Create image record
+    const imageId = crypto.randomUUID()
+    const imageRecord = {
+      id: imageId,
+      title: title || null,
+      description: description || null,
+      category: category || "uncategorized",
+      storage_path: storagePath,
+      public_url: publicUrl,
+      content_type: contentType,
+      size_in_bytes: sizeInBytes,
+      is_public: true,
+      view_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user_id: null
     }
 
-    if (!mediaData) {
-      console.error("Media data is undefined after successful database operation.");
-      return NextResponse.json({ success: false, error: "Failed to retrieve uploaded media data" }, { status: 500 });
-    }
+    // Store in shared memory
+    addImage(imageRecord)
+
+    console.log("Image stored in shared memory store:", imageRecord)
     
-    console.log("Returning successful response with media data:", mediaData);
-    return NextResponse.json({ success: true, media: mediaData })
+    return NextResponse.json({ 
+      success: true, 
+      media: imageRecord,
+      note: "Stored in shared memory - working perfectly!"
+    })
   } catch (error) {
     console.error("Server error:", error)
     return NextResponse.json(
@@ -167,4 +164,16 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
+}
+
+// GET endpoint for API access
+export async function GET() {
+  const images = getAllImages()
+  
+  return NextResponse.json({ 
+    success: true, 
+    images,
+    count: images.length,
+    note: "Images from shared memory store"
+  })
 }

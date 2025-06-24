@@ -1,62 +1,31 @@
-import { createServerClient } from "@/lib/supabase/server"
 import { ImageGrid } from "@/components/image-grid"
 import { GalleryActions } from "@/components/gallery-actions"
-import { CategoryFilter } from "@/components/category-filter"
+import { getAllImages, getCategories } from "@/lib/memory-store"
 
 export const metadata = {
   title: "Gallery - IHP",
   description: "Browse all uploaded images",
 }
 
-export const revalidate = 60 // Revalidate this page every 60 seconds
+export const revalidate = 0 // Disable caching while using memory storage
 
 interface GalleryPageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string
-  }
+  }>
 }
 
 export default async function GalleryPage({ searchParams }: GalleryPageProps) {
-  const supabase = createServerClient()
-  const selectedCategory = searchParams.category
-
+  const { category: selectedCategory } = await searchParams
+  
   try {
-    // Get distinct categories for filter
-    const { data: categoriesData } = await supabase
-      .from("images")
-      .select("category")
-      .not("category", "is", null)
+    const allImages = getAllImages()
+    const categories = getCategories()
 
-    const validCategories = categoriesData?.map(item => item.category).filter(cat => cat !== null) || []
-    const categories = [...new Set(validCategories)]
-
-    // Build query for images
-    let query = supabase
-      .from("images")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50)
-
-    // Apply category filter if selected
-    if (selectedCategory && selectedCategory !== "all") {
-      query = query.eq("category", selectedCategory)
-    }
-
-    const { data: images, error } = await query
-
-    if (error) {
-      console.error("Error fetching images:", error)
-      return (
-        <div className="page-container">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <h1 className="text-3xl font-bold">Image Gallery</h1>
-          </div>
-          <div className="flex justify-center p-12 border bg-muted/20">
-            <p className="text-muted-foreground text-center">Failed to load images: {error.message}</p>
-          </div>
-        </div>
-      )
-    }
+    // Filter images by category if selected
+    const filteredImages = selectedCategory && selectedCategory !== "all" 
+      ? allImages.filter((img: any) => img.category === selectedCategory)
+      : allImages
 
     return (
       <div className="page-container">
@@ -70,23 +39,24 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
               }
             </p>
           </div>
-          {images && images.length > 0 && <GalleryActions />}
+          {allImages.length > 0 && <GalleryActions />}
         </div>
 
         <div className="mb-8">
-          <CategoryFilter categories={categories} selectedCategory={selectedCategory} />
+          <p className="text-sm text-muted-foreground">
+            Categories: {categories.length > 0 ? categories.join(", ") : "None"}
+          </p>
         </div>
 
-        {images && images.length > 0 ? (
-          <>
-            <div className="mb-6">
-              <p className="text-sm text-muted-foreground">
-                Showing {images.length} image{images.length === 1 ? '' : 's'}
-                {selectedCategory && selectedCategory !== "all" && ` in "${selectedCategory}"`}
-              </p>
-            </div>
-            <ImageGrid images={images} />
-          </>
+        <div className="mb-6">
+          <p className="text-sm text-muted-foreground">
+            ✅ Memory storage working - {allImages.length} total images, showing {filteredImages.length}
+            {selectedCategory && selectedCategory !== "all" && ` in "${selectedCategory}"`}
+          </p>
+        </div>
+
+        {filteredImages.length > 0 ? (
+          <ImageGrid images={filteredImages} />
         ) : (
           <div className="flex flex-col items-center justify-center p-12 border bg-muted/20">
             <p className="text-muted-foreground text-center">

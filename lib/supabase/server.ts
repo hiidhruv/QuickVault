@@ -4,8 +4,9 @@ import type { Database } from "@/lib/database.types"
 
 // Create a server component client
 export const createServerClient = () => {
+  const cookieStore = cookies()
   return createServerComponentClient<Database>(
-    { cookies },
+    { cookies: () => cookieStore },
     {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
       supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -15,8 +16,9 @@ export const createServerClient = () => {
 
 // Create a server action client
 export const createActionClient = () => {
+  const cookieStore = cookies()
   return createServerActionClient<Database>(
-    { cookies },
+    { cookies: () => cookieStore },
     {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
       supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
