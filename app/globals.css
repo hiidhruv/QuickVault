@@ -58,6 +58,21 @@
   }
 }
 
+/* Better container styles with proper spacing */
+@layer components {
+  .container {
+    @apply px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto;
+  }
+  
+  .page-container {
+    @apply px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl mx-auto;
+  }
+  
+  .content-safe {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+}
+
 /* Override any remaining rounded corners */
 .rounded,
 .rounded-md,
@@ -67,4 +82,30 @@
 .rounded-3xl,
 .rounded-full {
   border-radius: 0 !important;
+}
+
+/* Line clamping utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Ensure content doesn't hit screen edges */
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
+  
+  .page-container {
+    @apply px-4 py-4;
+  }
 }

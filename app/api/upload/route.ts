@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
     const catboxUrlInput = formData.get("catboxUrl") as string | null // New input for Catbox URL
     const title = formData.get("title") as string
     const description = formData.get("description") as string
+    const category = formData.get("category") as string
 
     let storagePath: string
     let publicUrl: string
@@ -130,6 +131,7 @@ export async function POST(request: NextRequest) {
       .insert({
         title: title || null,
         description: description || null,
+        category: category || "uncategorized",
         storage_path: storagePath,
         public_url: publicUrl,
         content_type: contentType,

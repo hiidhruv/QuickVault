@@ -12,15 +12,32 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Maximum file size for Vercel serverless functions (4.5MB to be safe)
 const MAX_FILE_SIZE = 4.5 * 1024 * 1024
+
+// Common categories for image organization
+const COMMON_CATEGORIES = [
+  "uncategorized",
+  "screenshots", 
+  "photos",
+  "artwork",
+  "memes",
+  "documents",
+  "design",
+  "logos",
+  "wallpapers",
+  "projects"
+]
 
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [category, setCategory] = useState("uncategorized")
+  const [customCategory, setCustomCategory] = useState("")
   const [isUploading, setIsUploading] = useState(false)
   const [directUpload, setDirectUpload] = useState(false)
   const { toast } = useToast()
@@ -116,6 +133,10 @@ export function UploadForm() {
     })
   }
 
+  const getSelectedCategory = () => {
+    return category === "custom" ? customCategory : category
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -123,6 +144,16 @@ export function UploadForm() {
       toast({
         title: "No file selected",
         description: "Please select an image to upload",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const finalCategory = getSelectedCategory()
+    if (!finalCategory.trim()) {
+      toast({
+        title: "Category required",
+        description: "Please select or enter a category",
         variant: "destructive",
       })
       return
@@ -142,6 +173,7 @@ export function UploadForm() {
       formData.append("file", file)
       formData.append("title", title)
       formData.append("description", description)
+      formData.append("category", finalCategory)
 
       // Log the file type being uploaded
       console.log("Uploading file:", file.name, file.type, `${(file.size / 1024 / 1024).toFixed(2)}MB`)
@@ -160,7 +192,7 @@ export function UploadForm() {
 
       toast({
         title: "Upload successful",
-        description: `Your image has been uploaded as ${file.type}`,
+        description: `Your image has been uploaded to "${finalCategory}" category`,
       })
 
       // Redirect to the image page
@@ -192,6 +224,16 @@ export function UploadForm() {
       return
     }
 
+    const finalCategory = getSelectedCategory()
+    if (!finalCategory.trim()) {
+      toast({
+        title: "Category required",
+        description: "Please select or enter a category",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsUploading(true)
 
     try {
@@ -199,6 +241,7 @@ export function UploadForm() {
       formData.append("catboxUrl", manualUrl)
       formData.append("title", title)
       formData.append("description", description)
+      formData.append("category", finalCategory)
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -213,7 +256,7 @@ export function UploadForm() {
 
       toast({
         title: "URL added to gallery",
-        description: "The Catbox URL has been successfully indexed and added to your gallery.",
+        description: `The Catbox URL has been successfully indexed and added to "${finalCategory}" category.`,
       })
 
       // Redirect to the media page
@@ -274,7 +317,7 @@ export function UploadForm() {
             </div>
 
             {directUpload && (
-              <Alert className="mt-4" variant="warning">
+              <Alert className="mt-4" variant="default">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Large file detected</AlertTitle>
                 <AlertDescription>
@@ -286,7 +329,7 @@ export function UploadForm() {
         </Card>
       )}
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="title">Title (optional)</Label>
           <Input
@@ -298,15 +341,40 @@ export function UploadForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Description (optional)</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add a description to your image"
-            rows={3}
-          />
+          <Label htmlFor="category">Category</Label>
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {COMMON_CATEGORIES.map((cat) => (
+                <SelectItem key={cat} value={cat} className="capitalize">
+                  {cat}
+                </SelectItem>
+              ))}
+              <SelectItem value="custom">Custom Category</SelectItem>
+            </SelectContent>
+          </Select>
+          {category === "custom" && (
+            <Input
+              value={customCategory}
+              onChange={(e) => setCustomCategory(e.target.value)}
+              placeholder="Enter custom category"
+              className="mt-2"
+            />
+          )}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description (optional)</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Add a description to your image"
+          rows={3}
+        />
       </div>
 
       <div className="flex justify-end">
