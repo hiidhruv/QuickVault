@@ -1,5 +1,6 @@
 import { ImageGrid } from "@/components/image-grid"
 import { GalleryActions } from "@/components/gallery-actions"
+import { CategoryFilter } from "@/components/category-filter"
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/database.types"
 
@@ -18,11 +19,12 @@ export const revalidate = 0 // Allow fresh data from database
 interface GalleryPageProps {
   searchParams: Promise<{
     category?: string
+    search?: string
   }>
 }
 
 export default async function GalleryPage({ searchParams }: GalleryPageProps) {
-  const { category: selectedCategory } = await searchParams
+  const { category: selectedCategory, search } = await searchParams
   
   try {
     // Fetch all images from database
@@ -37,13 +39,39 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
 
     const images = allImages || []
 
-    // Get unique categories
-    const categories = [...new Set(images.map(img => img.category).filter(Boolean))]
+    // Get unique categories from images
+    const categoriesSet = new Set<string>()
+    images.forEach(img => {
+      if (img.category) {
+        categoriesSet.add(img.category)
+      }
+    })
+    
+    // Convert to array and sort, but keep "uncategorized" first if it exists
+    const categories = Array.from(categoriesSet).sort((a, b) => {
+      if (a === "uncategorized") return -1
+      if (b === "uncategorized") return 1
+      return a.toLowerCase().localeCompare(b.toLowerCase())
+    })
 
-    // Filter images by category if selected
-    const filteredImages = selectedCategory && selectedCategory !== "all" 
-      ? images.filter((img: any) => img.category === selectedCategory)
-      : images
+    // Filter images by category and search term
+    let filteredImages = images
+
+    // Apply category filter
+    if (selectedCategory && selectedCategory !== "all") {
+      filteredImages = filteredImages.filter((img: any) => img.category === selectedCategory)
+    }
+
+    // Apply search filter
+    if (search) {
+      const searchLower = search.toLowerCase()
+      filteredImages = filteredImages.filter((img: any) => {
+        const titleMatch = img.title?.toLowerCase().includes(searchLower)
+        const categoryMatch = img.category?.toLowerCase().includes(searchLower)
+        const descriptionMatch = img.description?.toLowerCase().includes(searchLower)
+        return titleMatch || categoryMatch || descriptionMatch
+      })
+    }
 
     return (
       <div className="page-container">
@@ -51,24 +79,27 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
           <div>
             <h1 className="text-3xl font-bold">Image Gallery</h1>
             <p className="text-muted-foreground mt-2">
-              {selectedCategory && selectedCategory !== "all" 
-                ? `Showing images in "${selectedCategory}" category`
-                : "Browse all your uploaded images"
+              {search 
+                ? `Searching for "${search}"${selectedCategory && selectedCategory !== "all" ? ` in ${selectedCategory}` : ""}`
+                : selectedCategory && selectedCategory !== "all" 
+                  ? `Showing images in "${selectedCategory}" category`
+                  : "Browse all your uploaded images"
               }
             </p>
           </div>
           {images.length > 0 && <GalleryActions />}
         </div>
 
-        <div className="mb-8">
-          <p className="text-sm text-muted-foreground">
-            Categories: {categories.length > 0 ? categories.join(", ") : "None"}
-          </p>
-        </div>
+        {categories.length > 0 && (
+          <div className="mb-8">
+            <CategoryFilter categories={categories} selectedCategory={selectedCategory} />
+          </div>
+        )}
 
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
             ✅ Database connected - {images.length} total images, showing {filteredImages.length}
+            {search && ` matching "${search}"`}
             {selectedCategory && selectedCategory !== "all" && ` in "${selectedCategory}"`}
           </p>
         </div>
@@ -80,9 +111,11 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
             <p className="text-muted-foreground text-center">
               {imagesError 
                 ? "Unable to load images from database"
-                : selectedCategory && selectedCategory !== "all" 
-                  ? `No images found in "${selectedCategory}" category`
-                  : "No images uploaded yet"
+                : search
+                  ? `No images found matching "${search}"`
+                  : selectedCategory && selectedCategory !== "all" 
+                    ? `No images found in "${selectedCategory}" category`
+                    : "No images uploaded yet"
               }
             </p>
           </div>

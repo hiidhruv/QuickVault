@@ -29,7 +29,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="https://img.intercomm.in/v6q4or.png" />
       </head>
       <body className={GeistMono.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <AccessCheck>
             <div className="min-h-screen flex flex-col">
               <Header />

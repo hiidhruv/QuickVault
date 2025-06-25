@@ -4,6 +4,8 @@ import Image from "next/image"
 import { formatBytes } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Tag, Eye, Calendar, FileImage } from "lucide-react"
+import { ImageCopyButton } from "@/components/image-copy-button"
+import { DeleteImageButton } from "@/components/delete-image-button"
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/database.types"
 
@@ -111,12 +113,24 @@ export default async function ImagePage({ params }: ImagePageProps) {
                 </Badge>
                 <Badge variant="outline">
                   <Calendar className="h-3 w-3 mr-1" />
-                  {new Date(image.created_at).toLocaleDateString()}
+                  {image.created_at ? new Date(image.created_at).toLocaleDateString() : "No date"}
                 </Badge>
                 <Badge variant="outline" className="bg-green-100 text-green-800">
                   ✅ Database Connected
                 </Badge>
               </div>
+            </div>
+            
+            {/* Copy and Delete buttons */}
+            <div className="flex gap-2">
+              <ImageCopyButton id={id} />
+              <DeleteImageButton 
+                imageId={id}
+                imageTitle={image.title || undefined}
+                variant="destructive"
+                size="default"
+                redirectAfterDelete={true}
+              />
             </div>
           </div>
 
@@ -148,8 +162,8 @@ export default async function ImagePage({ params }: ImagePageProps) {
           {/* Bottom info */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Uploaded on {new Date(image.created_at).toLocaleDateString()} at{" "}
-              {new Date(image.created_at).toLocaleTimeString()}
+              Uploaded on {image.created_at ? new Date(image.created_at).toLocaleDateString() : "Unknown date"} at{" "}
+              {image.created_at ? new Date(image.created_at).toLocaleTimeString() : "Unknown time"}
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>{image.view_count} total views</span>

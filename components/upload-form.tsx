@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Upload, Loader2, X, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -17,20 +17,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Maximum file size for Vercel serverless functions (4.5MB to be safe)
 const MAX_FILE_SIZE = 4.5 * 1024 * 1024
 
-// Common categories for image organization
-const COMMON_CATEGORIES = [
-  "uncategorized",
-  "screenshots", 
-  "photos",
-  "artwork",
-  "memes",
-  "documents",
-  "design",
-  "logos",
-  "wallpapers",
-  "projects"
-]
-
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -40,8 +26,23 @@ export function UploadForm() {
   const [customCategory, setCustomCategory] = useState("")
   const [isUploading, setIsUploading] = useState(false)
   const [directUpload, setDirectUpload] = useState(false)
+  const [userCategories, setUserCategories] = useState<string[]>([])
   const { toast } = useToast()
   const router = useRouter()
+
+  // Fetch existing categories from database
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/categories")
+        const data = await response.json()
+        setUserCategories(data.categories || [])
+      } catch (error) {
+        console.error("Error fetching categories:", error)
+      }
+    }
+    fetchCategories()
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -347,12 +348,18 @@ export function UploadForm() {
               <SelectValue placeholder="Select a category" />
             </SelectTrigger>
             <SelectContent>
-              {COMMON_CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat} className="capitalize">
-                  {cat}
-                </SelectItem>
-              ))}
-              <SelectItem value="custom">Custom Category</SelectItem>
+              <SelectItem value="uncategorized">Uncategorized</SelectItem>
+              {userCategories.length > 0 && (
+                <>
+                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Your Categories</div>
+                  {userCategories.map((cat) => (
+                    <SelectItem key={cat} value={cat} className="capitalize">
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </>
+              )}
+              <SelectItem value="custom">+ Custom Category</SelectItem>
             </SelectContent>
           </Select>
           {category === "custom" && (
@@ -361,6 +368,7 @@ export function UploadForm() {
               onChange={(e) => setCustomCategory(e.target.value)}
               placeholder="Enter custom category"
               className="mt-2"
+              autoFocus
             />
           )}
         </div>
