@@ -20,6 +20,34 @@ export function getFilenameFromUrl(url: string): string {
 }
 
 /**
+ * Determines if a file is a video based on its extension
+ * @param filename The filename or URL to check
+ * @returns True if the file appears to be a video
+ */
+export function isVideoFile(filename: string): boolean {
+  const videoExtensions = [
+    '.mp4', '.webm', '.mov', '.avi', '.mkv', 
+    '.wmv', '.flv', '.3gp', '.m4v', '.ogv'
+  ]
+  const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'))
+  return videoExtensions.includes(extension)
+}
+
+/**
+ * Determines if a file is an image based on its extension
+ * @param filename The filename or URL to check
+ * @returns True if the file appears to be an image
+ */
+export function isImageFile(filename: string): boolean {
+  const imageExtensions = [
+    '.jpg', '.jpeg', '.png', '.gif', '.webp', 
+    '.bmp', '.svg', '.tiff', '.ico'
+  ]
+  const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'))
+  return imageExtensions.includes(extension)
+}
+
+/**
  * Masks a catbox.moe URL to use the custom domain
  * @param url The original catbox URL
  * @returns The masked URL using i.dhrv.dev
@@ -35,6 +63,9 @@ export function maskCatboxUrl(url: string): string {
   // Check if it's a catbox URL
   if (url.includes("catbox.moe")) {
     const filename = getFilenameFromUrl(url)
+    
+    // Use different subdomain for videos if desired (optional enhancement)
+    // For now, we'll use the same domain for both images and videos
     return `https://i.dhrv.dev/${filename}`
   }
 
@@ -64,4 +95,42 @@ export function unmaskUrl(url: string, originalUrl?: string): string {
 
   // Return the URL as is if it's not using our domains
   return url
+}
+
+/**
+ * Gets the appropriate content type for a file based on its extension
+ * @param filename The filename or URL
+ * @returns The MIME content type
+ */
+export function getContentTypeFromFilename(filename: string): string {
+  const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'))
+  
+  // Video types
+  const videoTypes: Record<string, string> = {
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm', 
+    '.mov': 'video/mov',
+    '.avi': 'video/avi',
+    '.mkv': 'video/mkv',
+    '.wmv': 'video/wmv',
+    '.flv': 'video/flv',
+    '.3gp': 'video/3gp',
+    '.m4v': 'video/mp4',
+    '.ogv': 'video/ogg'
+  }
+  
+  // Image types
+  const imageTypes: Record<string, string> = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.bmp': 'image/bmp',
+    '.svg': 'image/svg+xml',
+    '.tiff': 'image/tiff',
+    '.ico': 'image/x-icon'
+  }
+  
+  return videoTypes[extension] || imageTypes[extension] || 'application/octet-stream'
 }

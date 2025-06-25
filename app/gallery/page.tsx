@@ -11,7 +11,7 @@ const supabase = createClient<Database>(supabaseUrl, supabaseKey)
 
 export const metadata = {
   title: "Gallery - IHP",
-  description: "Browse all uploaded images",
+  description: "Browse and discover images and videos from our community",
 }
 
 export const revalidate = 0 // Allow fresh data from database
@@ -27,23 +27,23 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
   const { category: selectedCategory, search } = await searchParams
   
   try {
-    // Fetch all images from database
-    const { data: allImages, error: imagesError } = await supabase
+    // Fetch all media from database
+    const { data: allMedia, error: mediaError } = await supabase
       .from('images')
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (imagesError) {
-      console.error("Database error:", imagesError)
+    if (mediaError) {
+      console.error("Database error:", mediaError)
     }
 
-    const images = allImages || []
+    const media = allMedia || []
 
-    // Get unique categories from images
+    // Get unique categories from media
     const categoriesSet = new Set<string>()
-    images.forEach(img => {
-      if (img.category) {
-        categoriesSet.add(img.category)
+    media.forEach(item => {
+      if (item.category) {
+        categoriesSet.add(item.category)
       }
     })
     
@@ -54,40 +54,44 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
       return a.toLowerCase().localeCompare(b.toLowerCase())
     })
 
-    // Filter images by category and search term
-    let filteredImages = images
+    // Filter media by category and search term
+    let filteredMedia = media
 
     // Apply category filter
     if (selectedCategory && selectedCategory !== "all") {
-      filteredImages = filteredImages.filter((img: any) => img.category === selectedCategory)
+      filteredMedia = filteredMedia.filter((item: any) => item.category === selectedCategory)
     }
 
     // Apply search filter
     if (search) {
       const searchLower = search.toLowerCase()
-      filteredImages = filteredImages.filter((img: any) => {
-        const titleMatch = img.title?.toLowerCase().includes(searchLower)
-        const categoryMatch = img.category?.toLowerCase().includes(searchLower)
-        const descriptionMatch = img.description?.toLowerCase().includes(searchLower)
+      filteredMedia = filteredMedia.filter((item: any) => {
+        const titleMatch = item.title?.toLowerCase().includes(searchLower)
+        const categoryMatch = item.category?.toLowerCase().includes(searchLower)
+        const descriptionMatch = item.description?.toLowerCase().includes(searchLower)
         return titleMatch || categoryMatch || descriptionMatch
       })
     }
+
+    // Count images and videos
+    const imageCount = media.filter(item => item.content_type.startsWith('image/')).length
+    const videoCount = media.filter(item => item.content_type.startsWith('video/')).length
 
     return (
       <div className="page-container">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Image Gallery</h1>
+            <h1 className="text-3xl font-bold">Media Gallery</h1>
             <p className="text-muted-foreground mt-2">
               {search 
                 ? `Searching for "${search}"${selectedCategory && selectedCategory !== "all" ? ` in ${selectedCategory}` : ""}`
                 : selectedCategory && selectedCategory !== "all" 
-                  ? `Showing images in "${selectedCategory}" category`
-                  : "Browse all your uploaded images"
+                  ? `Showing media in "${selectedCategory}" category`
+                  : "Browse all your uploaded images and videos"
               }
             </p>
           </div>
-          {images.length > 0 && <GalleryActions />}
+          {media.length > 0 && <GalleryActions />}
         </div>
 
         {categories.length > 0 && (
@@ -98,24 +102,24 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
 
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            ✅ Database connected - {images.length} total images, showing {filteredImages.length}
+            ✅ Database connected - {media.length} total uploads ({imageCount} images, {videoCount} videos), showing {filteredMedia.length}
             {search && ` matching "${search}"`}
             {selectedCategory && selectedCategory !== "all" && ` in "${selectedCategory}"`}
           </p>
         </div>
 
-        {filteredImages.length > 0 ? (
-          <ImageGrid images={filteredImages} />
+        {filteredMedia.length > 0 ? (
+          <ImageGrid images={filteredMedia} />
         ) : (
           <div className="flex flex-col items-center justify-center p-12 border bg-muted/20">
             <p className="text-muted-foreground text-center">
-              {imagesError 
-                ? "Unable to load images from database"
+              {mediaError 
+                ? "Unable to load media from database"
                 : search
-                  ? `No images found matching "${search}"`
+                  ? `No media found matching "${search}"`
                   : selectedCategory && selectedCategory !== "all" 
-                    ? `No images found in "${selectedCategory}" category`
-                    : "No images uploaded yet"
+                    ? `No media found in "${selectedCategory}" category`
+                    : "No media uploaded yet"
               }
             </p>
           </div>
@@ -127,7 +131,7 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
     return (
       <div className="page-container">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <h1 className="text-3xl font-bold">Image Gallery</h1>
+          <h1 className="text-3xl font-bold">Media Gallery</h1>
         </div>
         <div className="flex justify-center p-12 border bg-muted/20">
           <p className="text-muted-foreground text-center">An error occurred while loading the gallery</p>

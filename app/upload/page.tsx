@@ -2,7 +2,7 @@ import { UploadForm } from "@/components/upload-form"
 
 export const metadata = {
   title: "Upload - IHP",
-  description: "Upload and share your images",
+  description: "Upload and share your images and videos",
 }
 
 export default function UploadPage() {
@@ -11,9 +11,9 @@ export default function UploadPage() {
       <div className="max-w-2xl mx-auto">
         <div className="space-y-8">
           <div className="text-center space-y-4">
-            <h1 className="text-3xl font-bold tracking-tight">Upload Image</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Upload Media</h1>
             <p className="text-muted-foreground text-lg">
-              Share your images with the world. Organize them by categories for easy browsing.
+              Share your images and videos with the world. Organize them by categories for easy browsing.
             </p>
           </div>
           

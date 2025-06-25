@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import { formatBytes } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { Tag, Eye, Calendar, FileImage } from "lucide-react"
+import { Tag, Eye, Calendar, FileImage, Film, Play } from "lucide-react"
 import { ImageCopyButton } from "@/components/image-copy-button"
 import { DeleteImageButton } from "@/components/delete-image-button"
 import { createClient } from "@supabase/supabase-js"
@@ -14,70 +14,80 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient<Database>(supabaseUrl, supabaseKey)
 
-interface ImagePageProps {
+interface MediaPageProps {
   params: Promise<{
     id: string
   }>
 }
 
-async function getImageById(id: string) {
-  const { data: image, error } = await supabase
+async function getMediaById(id: string) {
+  const { data: media, error } = await supabase
     .from('images')
     .select('*')
     .eq('id', id)
     .single()
 
-  if (error || !image) {
+  if (error || !media) {
     return null
   }
 
-  return image
+  return media
 }
 
-export async function generateMetadata({ params }: ImagePageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: MediaPageProps): Promise<Metadata> {
   const { id } = await params
-  const image = await getImageById(id)
+  const media = await getMediaById(id)
 
-  if (!image) {
+  if (!media) {
     return {
-      title: "Image not found",
+      title: "Media not found",
     }
   }
 
+  const isVideo = media.content_type.startsWith("video/")
+  
   return {
     title: "IHP",
     description: " ", // Minimal description for cleaner embeds
     openGraph: {
-      images: [image.public_url],
+      images: isVideo ? [] : [media.public_url],
+      videos: isVideo ? [{ url: media.public_url, type: media.content_type }] : [],
       type: "website",
       title: " ",
       description: " ",
     },
     twitter: {
-      images: [image.public_url],
-      card: "summary_large_image",
+      images: isVideo ? [] : [media.public_url],
+      card: isVideo ? "player" : "summary_large_image",
       title: " ",
       description: " ",
+      ...(isVideo && {
+        player: {
+          url: media.public_url,
+          width: 1200,
+          height: 675,
+        }
+      })
     },
   }
 }
 
-export default async function ImagePage({ params }: ImagePageProps) {
+export default async function MediaPage({ params }: MediaPageProps) {
   const { id } = await params
-  const image = await getImageById(id)
+  const media = await getMediaById(id)
 
-  if (!image) {
+  if (!media) {
     notFound()
   }
 
   // Increment view count
   await supabase
     .from('images')
-    .update({ view_count: (image.view_count || 0) + 1 })
+    .update({ view_count: (media.view_count || 0) + 1 })
     .eq('id', id)
 
   // Check if the media is a video
-  const isVideo = image.content_type.startsWith("video/")
+  const isVideo = media.content_type.startsWith("video/")
 
   return (
     <div className="page-container">
@@ -87,33 +97,50 @@ export default async function ImagePage({ params }: ImagePageProps) {
           <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
             <div className="flex-1 space-y-4">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight">{image.title || "Untitled"}</h1>
-                {image.description && (
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-bold tracking-tight">{media.title || "Untitled"}</h1>
+                  {isVideo ? (
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                      <Film className="h-3 w-3 mr-1" />
+                      Video
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      <FileImage className="h-3 w-3 mr-1" />
+                      Image
+                    </Badge>
+                  )}
+                </div>
+                {media.description && (
                   <p className="text-muted-foreground text-lg leading-relaxed max-w-3xl">
-                    {image.description}
+                    {media.description}
                   </p>
                 )}
               </div>
               
               {/* Metadata badges */}
               <div className="flex flex-wrap gap-3">
-                {image.category && (
+                {media.category && (
                   <Badge variant="secondary" className="capitalize">
                     <Tag className="h-3 w-3 mr-1" />
-                    {image.category}
+                    {media.category}
                   </Badge>
                 )}
                 <Badge variant="outline">
                   <Eye className="h-3 w-3 mr-1" />
-                  {image.view_count} views
+                  {media.view_count} views
                 </Badge>
                 <Badge variant="outline">
-                  <FileImage className="h-3 w-3 mr-1" />
-                  {formatBytes(image.size_in_bytes)}
+                  {isVideo ? (
+                    <Film className="h-3 w-3 mr-1" />
+                  ) : (
+                    <FileImage className="h-3 w-3 mr-1" />
+                  )}
+                  {formatBytes(media.size_in_bytes)}
                 </Badge>
                 <Badge variant="outline">
                   <Calendar className="h-3 w-3 mr-1" />
-                  {image.created_at ? new Date(image.created_at).toLocaleDateString() : "No date"}
+                  {media.created_at ? new Date(media.created_at).toLocaleDateString() : "No date"}
                 </Badge>
                 <Badge variant="outline" className="bg-green-100 text-green-800">
                   ✅ Database Connected
@@ -126,7 +153,7 @@ export default async function ImagePage({ params }: ImagePageProps) {
               <ImageCopyButton id={id} />
               <DeleteImageButton 
                 imageId={id}
-                imageTitle={image.title || undefined}
+                imageTitle={media.title || undefined}
                 variant="destructive"
                 size="default"
                 redirectAfterDelete={true}
@@ -134,20 +161,35 @@ export default async function ImagePage({ params }: ImagePageProps) {
             </div>
           </div>
 
-          {/* Image/Video display */}
+          {/* Media display */}
           <div className="border bg-muted/20 overflow-hidden">
             <div className="relative">
               <div className="flex items-center justify-center min-h-[50vh] max-h-[80vh] bg-black/5">
                 {isVideo ? (
-                  <video
-                    src={image.public_url}
-                    controls
-                    className="max-h-[80vh] w-auto object-contain"
-                  />
+                  <div className="relative w-full">
+                    <video
+                      src={media.public_url}
+                      controls
+                      preload="metadata"
+                      className="max-h-[80vh] w-full object-contain"
+                      poster={media.public_url + "#t=0.5"}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                    {/* Video info overlay */}
+                    <div className="absolute top-4 left-4 bg-black/80 text-white px-3 py-2 rounded-lg backdrop-blur-sm">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Play className="h-4 w-4" />
+                        <span>{media.content_type.split('/')[1].toUpperCase()}</span>
+                        <span>•</span>
+                        <span>{formatBytes(media.size_in_bytes)}</span>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <Image
-                    src={image.public_url || "/placeholder.svg"}
-                    alt={image.title || "Uploaded image"}
+                    src={media.public_url || "/placeholder.svg"}
+                    alt={media.title || "Uploaded media"}
                     width={1200}
                     height={800}
                     className="max-h-[80vh] w-auto object-contain"
@@ -162,13 +204,16 @@ export default async function ImagePage({ params }: ImagePageProps) {
           {/* Bottom info */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t">
             <div className="text-sm text-muted-foreground">
-              Uploaded on {image.created_at ? new Date(image.created_at).toLocaleDateString() : "Unknown date"} at{" "}
-              {image.created_at ? new Date(image.created_at).toLocaleTimeString() : "Unknown time"}
+              Uploaded on {media.created_at ? new Date(media.created_at).toLocaleDateString() : "Unknown date"} at{" "}
+              {media.created_at ? new Date(media.created_at).toLocaleTimeString() : "Unknown time"}
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>{image.view_count} total views</span>
-              <span>Size: {formatBytes(image.size_in_bytes)}</span>
-              <span>Type: {image.content_type}</span>
+              <span>{media.view_count} total views</span>
+              <span>Size: {formatBytes(media.size_in_bytes)}</span>
+              <span>Type: {media.content_type}</span>
+              {isVideo && (
+                <span>Format: {media.content_type.split('/')[1].toUpperCase()}</span>
+              )}
             </div>
           </div>
         </div>

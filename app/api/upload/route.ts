@@ -13,6 +13,11 @@ const supabase = createClient<Database>(supabaseUrl, supabaseKey)
 // Maximum file size for serverless functions (4.5MB to be safe)
 const MAX_FILE_SIZE = 4.5 * 1024 * 1024
 
+// Supported file types
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml']
+const SUPPORTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/mov', 'video/avi', 'video/mkv', 'video/wmv', 'video/flv', 'video/3gp']
+const SUPPORTED_TYPES = [...SUPPORTED_IMAGE_TYPES, ...SUPPORTED_VIDEO_TYPES]
+
 // Helper function to get file metadata from a URL using HEAD request
 async function getFileMetadataFromUrl(url: string) {
   let contentType = 'application/octet-stream';
@@ -42,16 +47,47 @@ async function getFileMetadataFromUrl(url: string) {
   if (fileExtension) {
     switch (fileExtension) {
       case 'mp4':
+        contentType = 'video/mp4';
+        break;
       case 'mov':
+        contentType = 'video/mov';
+        break;
       case 'webm':
-        contentType = 'video/' + fileExtension;
+        contentType = 'video/webm';
+        break;
+      case 'avi':
+        contentType = 'video/avi';
+        break;
+      case 'mkv':
+        contentType = 'video/mkv';
+        break;
+      case 'wmv':
+        contentType = 'video/wmv';
+        break;
+      case 'flv':
+        contentType = 'video/flv';
+        break;
+      case '3gp':
+        contentType = 'video/3gp';
         break;
       case 'jpg':
       case 'jpeg':
+        contentType = 'image/jpeg';
+        break;
       case 'png':
+        contentType = 'image/png';
+        break;
       case 'gif':
+        contentType = 'image/gif';
+        break;
       case 'webp':
-        contentType = 'image/' + fileExtension;
+        contentType = 'image/webp';
+        break;
+      case 'bmp':
+        contentType = 'image/bmp';
+        break;
+      case 'svg':
+        contentType = 'image/svg+xml';
         break;
       default:
         // Keep original contentType or default
@@ -87,9 +123,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (file) {
-      // Existing direct file upload to Catbox.moe
-      if (!file.type.startsWith("image/")) {
-        return NextResponse.json({ success: false, error: "Invalid file type for direct upload. Only images are allowed." }, { status: 400 })
+      // Check if file type is supported
+      const isSupported = SUPPORTED_TYPES.some(type => file.type === type) || 
+                         file.type.startsWith("image/") || 
+                         file.type.startsWith("video/")
+      
+      if (!isSupported) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "Invalid file type. Only images and videos are supported." 
+        }, { status: 400 })
       }
 
       if (file.size > MAX_FILE_SIZE) {
@@ -131,12 +174,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "No file or Catbox URL provided" }, { status: 400 })
     }
 
-    // Create image record in Supabase database
-    const imageId = crypto.randomUUID()
-    const { data: imageRecord, error: dbError } = await supabase
-      .from('images')
+    // Create media record in Supabase database
+    const mediaId = crypto.randomUUID()
+    const { data: mediaRecord, error: dbError } = await supabase
+      .from('images') // Keep the same table name for now to avoid breaking changes
       .insert({
-        id: imageId,
+        id: mediaId,
         title: title || null,
         description: description || null,
         category: category || "uncategorized",
@@ -160,11 +203,11 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    console.log("Image stored in database:", imageRecord)
+    console.log("Media stored in database:", mediaRecord)
     
     return NextResponse.json({ 
       success: true, 
-      media: imageRecord,
+      media: mediaRecord,
       note: "Successfully stored in database - accessible from anywhere!"
     })
   } catch (error) {
@@ -183,8 +226,8 @@ export async function POST(request: NextRequest) {
 // GET endpoint for API access
 export async function GET() {
   try {
-    const { data: images, error } = await supabase
-      .from('images')
+    const { data: media, error } = await supabase
+      .from('images') // Keep the same table name for now
       .select('*')
       .order('created_at', { ascending: false })
 
@@ -199,9 +242,9 @@ export async function GET() {
     
     return NextResponse.json({ 
       success: true, 
-      images: images || [],
-      count: images?.length || 0,
-      note: "Images from Supabase database"
+      media: media || [],
+      count: media?.length || 0,
+      note: "Media from Supabase database"
     })
   } catch (error) {
     console.error("Server error:", error)

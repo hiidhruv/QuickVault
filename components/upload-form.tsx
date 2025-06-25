@@ -17,9 +17,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Maximum file size for Vercel serverless functions (4.5MB to be safe)
 const MAX_FILE_SIZE = 4.5 * 1024 * 1024
 
+// Supported video formats
+const SUPPORTED_VIDEO_TYPES = [
+  'video/mp4',
+  'video/webm', 
+  'video/mov',
+  'video/avi',
+  'video/mkv',
+  'video/wmv',
+  'video/flv',
+  'video/3gp'
+]
+
+// Supported image formats  
+const SUPPORTED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/jpg', 
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/bmp',
+  'image/svg+xml'
+]
+
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  const [fileType, setFileType] = useState<'image' | 'video' | null>(null)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [category, setCategory] = useState("uncategorized")
@@ -48,15 +72,21 @@ export function UploadForm() {
     const selectedFile = e.target.files?.[0]
     if (!selectedFile) return
 
-    // Check if file is an image
-    if (!selectedFile.type.startsWith("image/")) {
+    // Check if file is a supported media type
+    const isImage = SUPPORTED_IMAGE_TYPES.includes(selectedFile.type) || selectedFile.type.startsWith("image/")
+    const isVideo = SUPPORTED_VIDEO_TYPES.includes(selectedFile.type) || selectedFile.type.startsWith("video/")
+    
+    if (!isImage && !isVideo) {
       toast({
         title: "Invalid file type",
-        description: "Please select an image file",
+        description: "Please select an image or video file",
         variant: "destructive",
       })
       return
     }
+
+    // Set file type for UI rendering
+    setFileType(isImage ? 'image' : 'video')
 
     // Check file size for serverless function limit
     if (selectedFile.size > MAX_FILE_SIZE) {
@@ -89,6 +119,7 @@ export function UploadForm() {
   const clearFile = () => {
     setFile(null)
     setPreview(null)
+    setFileType(null)
     setDirectUpload(false)
   }
 
@@ -144,7 +175,7 @@ export function UploadForm() {
     if (!file) {
       toast({
         title: "No file selected",
-        description: "Please select an image to upload",
+        description: "Please select an image or video to upload",
         variant: "destructive",
       })
       return
@@ -193,16 +224,16 @@ export function UploadForm() {
 
       toast({
         title: "Upload successful",
-        description: `Your image has been uploaded to "${finalCategory}" category`,
+        description: `Your ${fileType} has been uploaded to "${finalCategory}" category`,
       })
 
-      // Redirect to the image page
+      // Redirect to the media page
       router.push(`/i/${data.media.id}`)
     } catch (error) {
       console.error("Upload error:", error)
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "There was an error uploading your image",
+        description: error instanceof Error ? error.message : `There was an error uploading your ${fileType}`,
         variant: "destructive",
       })
     } finally {
@@ -287,12 +318,18 @@ export function UploadForm() {
               <Upload className="h-10 w-10 text-muted-foreground mb-4" />
               <h3 className="font-medium text-lg mb-2">Drag & drop or click to upload</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Supports JPG, PNG, GIF, WEBP (max 4.5MB for automatic upload)
+                Supports images (JPG, PNG, GIF, WEBP) and videos (MP4, WEBM, MOV, AVI) - max 4.5MB for automatic upload
               </p>
               <Button type="button" variant="outline">
-                Select Image
+                Select Media
               </Button>
-              <input id="file-upload" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+              <input 
+                id="file-upload" 
+                type="file" 
+                accept="image/*,video/*" 
+                className="hidden" 
+                onChange={handleFileChange} 
+              />
             </div>
           </CardContent>
         </Card>
@@ -301,7 +338,16 @@ export function UploadForm() {
           <CardContent className="pt-6">
             <div className="relative">
               <div className="aspect-video relative overflow-hidden">
-                <img src={preview! || "/placeholder.svg"} alt="Preview" className="object-contain w-full h-full" />
+                {fileType === 'video' ? (
+                  <video 
+                    src={preview!} 
+                    controls 
+                    className="object-contain w-full h-full"
+                    muted
+                  />
+                ) : (
+                  <img src={preview! || "/placeholder.svg"} alt="Preview" className="object-contain w-full h-full" />
+                )}
               </div>
               <Button
                 type="button"
@@ -337,7 +383,7 @@ export function UploadForm() {
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Add a title to your image"
+            placeholder={`Add a title to your ${fileType === 'video' ? 'Video' : 'Image'}`}
           />
         </div>
 
@@ -380,7 +426,7 @@ export function UploadForm() {
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Add a description to your image"
+          placeholder={`Add a description to your ${fileType === 'video' ? 'Video' : 'Image'}`}
           rows={3}
         />
       </div>
@@ -393,7 +439,7 @@ export function UploadForm() {
         ) : (
           <Button type="button" onClick={handleSubmit} disabled={!file || isUploading}>
             {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isUploading ? "Uploading..." : "Upload Image"}
+            {isUploading ? "Uploading..." : `Upload ${fileType === 'video' ? 'Video' : 'Image'}`}
           </Button>
         )}
       </div>
@@ -407,7 +453,7 @@ export function UploadForm() {
               id="manual-url"
               value={manualUrl}
               onChange={(e) => setManualUrl(e.target.value)}
-              placeholder="https://files.catbox.moe/example.jpg"
+              placeholder="https://files.catbox.moe/example.mp4 or .jpg"
             />
           </div>
 

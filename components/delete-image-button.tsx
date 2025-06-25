@@ -89,15 +89,14 @@ export function DeleteImageButton({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Image</AlertDialogTitle>
+          <AlertDialogTitle>Delete Media</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete {imageTitle ? `"${imageTitle}"` : "this image"}? 
-            This action cannot be undone and will remove the image from your gallery.
+            Are you sure you want to delete {imageTitle ? `"${imageTitle}"` : "this media"}? This action cannot be undone.
             <br />
             <br />
-            <span className="text-xs text-muted-foreground">
-              Note: This only removes the image from your gallery database. The original image file on Catbox.moe will remain unchanged.
-            </span>
+            <small className="text-muted-foreground">
+              Note: This only removes the media from your gallery database. The original file on Catbox.moe will remain unchanged.
+            </small>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
