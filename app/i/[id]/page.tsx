@@ -150,7 +150,7 @@ export default async function MediaPage({ params }: MediaPageProps) {
             
             {/* Copy and Delete buttons */}
             <div className="flex gap-2">
-              <ImageCopyButton id={id} />
+              <ImageCopyButton id={id} mediaUrl={media.public_url} />
               <DeleteImageButton 
                 imageId={id}
                 imageTitle={media.title || undefined}

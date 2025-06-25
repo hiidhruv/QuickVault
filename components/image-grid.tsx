@@ -139,8 +139,8 @@ export function ImageGrid({ images }: MediaGridProps) {
             {/* Action buttons - outside the Link to prevent navigation */}
             <div className="px-4 pb-4 -mt-2 space-y-2">
               <CopyButton 
-                value={mediaUrl} 
-                label="Copy link"
+                value={media.public_url} 
+                label="Copy media link"
                 variant="outline"
                 size="sm"
                 className="w-full"
