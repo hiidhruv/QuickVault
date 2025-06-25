@@ -15,20 +15,20 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="page-container">
-        <div className="flex h-14 items-center justify-between">
+        <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2 mr-6">
-              <div className="h-7 w-7 overflow-hidden">
+            <Link href="/" className="flex items-center space-x-3 mr-6">
+              <div className="h-10 w-10 overflow-hidden">
                 <Image
                   src="https://img.intercomm.in/v6q4or.png"
-                  alt="IHP Logo"
-                  width={28}
-                  height={28}
+                  alt="QV Logo"
+                  width={40}
+                  height={40}
                   priority
                   unoptimized
                 />
               </div>
-              <span className="font-bold">IHP</span>
+              <span className="font-cherry-bomb text-2xl font-normal tracking-wide">QV</span>
             </Link>
             
             <nav className="hidden md:flex items-center space-x-6">
