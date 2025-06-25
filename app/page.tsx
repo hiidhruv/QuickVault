@@ -2,13 +2,29 @@ import { ImageGrid } from "@/components/image-grid"
 import { Button } from "@/components/ui/button"
 import { Upload } from "lucide-react"
 import Link from "next/link"
-import { getAllImages } from "@/lib/memory-store"
+import { createClient } from "@supabase/supabase-js"
+import type { Database } from "@/lib/database.types"
 
-export const revalidate = 0 // Disable caching while using memory storage
+// Initialize Supabase client with environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+
+export const revalidate = 0 // Allow fresh data from database
 
 export default async function Home() {
-  const images = getAllImages()
-  const recentImages = images.slice(0, 12) // Show last 12 images
+  // Fetch images from database
+  const { data: images, error } = await supabase
+    .from('images')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(12)
+
+  const recentImages = images || []
+
+  if (error) {
+    console.error("Database error:", error)
+  }
 
   return (
     <div className="page-container">
@@ -46,14 +62,16 @@ export default async function Home() {
           <>
             <div className="mb-4">
               <p className="text-sm text-muted-foreground">
-                ✅ Memory storage working - {images.length} images stored
+                ✅ Database connected - {recentImages.length} recent images found
               </p>
             </div>
             <ImageGrid images={recentImages} />
           </>
         ) : (
           <div className="flex flex-col items-center justify-center p-12 border bg-muted/20">
-            <p className="text-muted-foreground mb-6 text-center">No images uploaded yet</p>
+            <p className="text-muted-foreground mb-6 text-center">
+              {error ? "Unable to load images from database" : "No images uploaded yet"}
+            </p>
             <Link href="/upload">
               <Button size="lg">
                 <Upload className="mr-2 h-4 w-4" />

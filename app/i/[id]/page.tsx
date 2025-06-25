@@ -4,7 +4,13 @@ import Image from "next/image"
 import { formatBytes } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Tag, Eye, Calendar, FileImage } from "lucide-react"
-import { getImage } from "@/lib/memory-store"
+import { createClient } from "@supabase/supabase-js"
+import type { Database } from "@/lib/database.types"
+
+// Initialize Supabase client with environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase = createClient<Database>(supabaseUrl, supabaseKey)
 
 interface ImagePageProps {
   params: Promise<{
@@ -12,9 +18,23 @@ interface ImagePageProps {
   }>
 }
 
+async function getImageById(id: string) {
+  const { data: image, error } = await supabase
+    .from('images')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error || !image) {
+    return null
+  }
+
+  return image
+}
+
 export async function generateMetadata({ params }: ImagePageProps): Promise<Metadata> {
   const { id } = await params
-  const image = getImage(id)
+  const image = await getImageById(id)
 
   if (!image) {
     return {
@@ -42,11 +62,17 @@ export async function generateMetadata({ params }: ImagePageProps): Promise<Meta
 
 export default async function ImagePage({ params }: ImagePageProps) {
   const { id } = await params
-  const image = getImage(id)
+  const image = await getImageById(id)
 
   if (!image) {
     notFound()
   }
+
+  // Increment view count
+  await supabase
+    .from('images')
+    .update({ view_count: (image.view_count || 0) + 1 })
+    .eq('id', id)
 
   // Check if the media is a video
   const isVideo = image.content_type.startsWith("video/")
@@ -88,7 +114,7 @@ export default async function ImagePage({ params }: ImagePageProps) {
                   {new Date(image.created_at).toLocaleDateString()}
                 </Badge>
                 <Badge variant="outline" className="bg-green-100 text-green-800">
-                  ✅ Memory Storage
+                  ✅ Database Connected
                 </Badge>
               </div>
             </div>
