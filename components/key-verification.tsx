@@ -10,8 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
-
-const STORAGE_KEY = "imgur_lite_access"
+import { ACCESS_STORAGE_KEY } from "@/lib/constants"
 
 interface KeyVerificationProps {
   onAccessGranted?: () => void
@@ -25,7 +24,7 @@ export function KeyVerification({ onAccessGranted }: KeyVerificationProps) {
 
   useEffect(() => {
     // Check if already verified
-    const hasAccess = localStorage.getItem(STORAGE_KEY) === "true"
+    const hasAccess = localStorage.getItem(ACCESS_STORAGE_KEY) === "true"
     if (hasAccess) {
       onAccessGranted?.()
     }
@@ -49,7 +48,7 @@ export function KeyVerification({ onAccessGranted }: KeyVerificationProps) {
 
       if (data.success) {
         // Store access in localStorage
-        localStorage.setItem(STORAGE_KEY, "true")
+        localStorage.setItem(ACCESS_STORAGE_KEY, "true")
         
         toast({
           title: "Access granted",

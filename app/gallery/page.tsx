@@ -1,13 +1,10 @@
 import { ImageGrid } from "@/components/image-grid"
 import { GalleryActions } from "@/components/gallery-actions"
 import { CategoryFilter } from "@/components/category-filter"
-import { createClient } from "@supabase/supabase-js"
-import type { Database } from "@/lib/database.types"
+import { createDirectClient } from "@/lib/supabase/server"
 
-// Initialize Supabase client with environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+// Initialize Supabase client
+const supabase = createDirectClient()
 
 export const metadata = {
   title: "Gallery",
@@ -102,7 +99,7 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
 
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            ✅ Database connected - {media.length} total uploads ({imageCount} images, {videoCount} videos), showing {filteredMedia.length}
+            ✅ {media.length} total uploads ({imageCount} images, {videoCount} videos), showing {filteredMedia.length}
             {search && ` matching "${search}"`}
             {selectedCategory && selectedCategory !== "all" && ` in "${selectedCategory}"`}
           </p>

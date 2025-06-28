@@ -55,6 +55,15 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent zoom issues on mobile */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  /* Ensure proper mobile handling */
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
   }
 }
 
@@ -107,5 +116,18 @@
   
   .page-container {
     @apply px-4 py-4;
+  }
+}
+
+/* Additional mobile viewport fixes */
+@media screen and (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }

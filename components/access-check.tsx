@@ -4,13 +4,14 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { KeyVerification } from "@/components/key-verification"
+import { ACCESS_STORAGE_KEY } from "@/lib/constants"
 
 export function AccessCheck({ children }: { children: React.ReactNode }) {
   const [hasAccess, setHasAccess] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   const checkAccess = () => {
-    const accessGranted = localStorage.getItem("imgur_lite_access") === "true"
+    const accessGranted = localStorage.getItem(ACCESS_STORAGE_KEY) === "true"
     setHasAccess(accessGranted)
     return accessGranted
   }
@@ -22,7 +23,7 @@ export function AccessCheck({ children }: { children: React.ReactNode }) {
 
     // Listen for localStorage changes (for when KeyVerification component updates it)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "imgur_lite_access") {
+      if (e.key === ACCESS_STORAGE_KEY) {
         checkAccess()
       }
     }

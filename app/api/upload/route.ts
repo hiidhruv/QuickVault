@@ -1,22 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { uploadToCatbox } from "@/lib/catbox"
 import { maskCatboxUrl } from "@/lib/url-masking"
-import { createClient } from "@supabase/supabase-js"
-import type { Database } from "@/lib/database.types"
+import { createDirectClient } from "@/lib/supabase/server"
+import { MAX_FILE_SIZE, SUPPORTED_TYPES } from "@/lib/constants"
 import crypto from "crypto"
 
-// Initialize Supabase client with environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient<Database>(supabaseUrl, supabaseKey)
-
-// Maximum file size for serverless functions (4.5MB to be safe)
-const MAX_FILE_SIZE = 4.5 * 1024 * 1024
-
-// Supported file types
-const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml']
-const SUPPORTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/mov', 'video/avi', 'video/mkv', 'video/wmv', 'video/flv', 'video/3gp']
-const SUPPORTED_TYPES = [...SUPPORTED_IMAGE_TYPES, ...SUPPORTED_VIDEO_TYPES]
+// Initialize Supabase client
+const supabase = createDirectClient()
 
 // Helper function to get file metadata from a URL using HEAD request
 async function getFileMetadataFromUrl(url: string) {
@@ -124,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     if (file) {
       // Check if file type is supported
-      const isSupported = SUPPORTED_TYPES.some(type => file.type === type) || 
+      const isSupported = (SUPPORTED_TYPES as readonly string[]).some(type => file.type === type) || 
                          file.type.startsWith("image/") || 
                          file.type.startsWith("video/")
       

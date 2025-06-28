@@ -17,27 +17,12 @@ export function formatBytes(bytes: number, decimals = 2) {
   return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
 }
 
-export function getFileExtension(filename: string) {
-  return filename.slice(((filename.lastIndexOf(".") - 1) >>> 0) + 2)
-}
-
-export function generateRandomString(length = 8) {
-  return Math.random()
-    .toString(36)
-    .substring(2, 2 + length)
-}
-
 // Function to get the domain URL - hardcoded to img.intercomm.in
 export function getDomainUrl() {
-  return "https://img.intercomm.in"
-}
-
-// Function to generate a custom domain image URL
-export function getCustomImageUrl(filename: string) {
-  return `https://img.intercomm.in/api/images/${filename}`
+  return "https://i.dhrv.dev"
 }
 
 // Function to generate a shareable image page URL
 export function getShareableImageUrl(imageId: string) {
-  return `https://img.intercomm.in/i/${imageId}`
+  return `https://i.dhrv.dev/i/${imageId}`
 }

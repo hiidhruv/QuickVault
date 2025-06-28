@@ -1,14 +1,11 @@
 import { ImageGrid } from "@/components/image-grid"
 import { Button } from "@/components/ui/button"
-import { Upload } from "lucide-react"
+import { Upload, ExternalLink } from "lucide-react"
 import Link from "next/link"
-import { createClient } from "@supabase/supabase-js"
-import type { Database } from "@/lib/database.types"
+import { createDirectClient } from "@/lib/supabase/server"
 
-// Initialize Supabase client with environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+// Initialize Supabase client
+const supabase = createDirectClient()
 
 export const revalidate = 0 // Allow fresh data from database
 
@@ -51,10 +48,12 @@ export default async function Home() {
       </div>
 
       <div className="space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold tracking-tight">Recent Uploads</h2>
           <Link href="/gallery">
-            <Button variant="ghost" className="w-full sm:w-auto">View all</Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <ExternalLink className="h-4 w-4" />
+            </Button>
           </Link>
         </div>
 
@@ -62,7 +61,7 @@ export default async function Home() {
           <>
             <div className="mb-4">
               <p className="text-sm text-muted-foreground">
-                ✅ Database connected - {recentMedia.length} recent uploads found
+                ✅ {recentMedia.length} recent uploads found
               </p>
             </div>
             <ImageGrid images={recentMedia} />

@@ -13,32 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-// Maximum file size for Vercel serverless functions (4.5MB to be safe)
-const MAX_FILE_SIZE = 4.5 * 1024 * 1024
-
-// Supported video formats
-const SUPPORTED_VIDEO_TYPES = [
-  'video/mp4',
-  'video/webm', 
-  'video/mov',
-  'video/avi',
-  'video/mkv',
-  'video/wmv',
-  'video/flv',
-  'video/3gp'
-]
-
-// Supported image formats  
-const SUPPORTED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg', 
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/bmp',
-  'image/svg+xml'
-]
+import { MAX_FILE_SIZE, SUPPORTED_IMAGE_TYPES, SUPPORTED_VIDEO_TYPES } from "@/lib/constants"
 
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null)
@@ -72,8 +47,8 @@ export function UploadForm() {
   // Extracted file processing logic to reuse for both file input and drop
   const processFile = (selectedFile: File) => {
     // Check if file is a supported media type
-    const isImage = SUPPORTED_IMAGE_TYPES.includes(selectedFile.type) || selectedFile.type.startsWith("image/")
-    const isVideo = SUPPORTED_VIDEO_TYPES.includes(selectedFile.type) || selectedFile.type.startsWith("video/")
+    const isImage = (SUPPORTED_IMAGE_TYPES as readonly string[]).includes(selectedFile.type) || selectedFile.type.startsWith("image/")
+    const isVideo = (SUPPORTED_VIDEO_TYPES as readonly string[]).includes(selectedFile.type) || selectedFile.type.startsWith("video/")
     
     if (!isImage && !isVideo) {
       toast({

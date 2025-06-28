@@ -6,13 +6,12 @@ import { Badge } from "@/components/ui/badge"
 import { Tag, Eye, Calendar, FileImage, Film, Play } from "lucide-react"
 import { ImageCopyButton } from "@/components/image-copy-button"
 import { DeleteImageButton } from "@/components/delete-image-button"
-import { createClient } from "@supabase/supabase-js"
+import { EditImageButton } from "@/components/edit-image-button"
+import { createDirectClient } from "@/lib/supabase/server"
 import type { Database } from "@/lib/database.types"
 
-// Initialize Supabase client with environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+// Initialize Supabase client
+const supabase = createDirectClient()
 
 interface MediaPageProps {
   params: Promise<{
@@ -148,9 +147,14 @@ export default async function MediaPage({ params }: MediaPageProps) {
               </div>
             </div>
             
-            {/* Copy and Delete buttons */}
+            {/* Copy, Edit and Delete buttons */}
             <div className="flex gap-2">
               <ImageCopyButton id={id} mediaUrl={media.public_url} />
+              <EditImageButton 
+                media={media}
+                variant="secondary"
+                size="default"
+              />
               <DeleteImageButton 
                 imageId={id}
                 imageTitle={media.title || undefined}
