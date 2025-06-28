@@ -14,7 +14,7 @@ You can use it to host **images and videos** and get their direct share/embed li
 
 **Step 3:** Ask Cursor to **read the codebase and do the rest of the setup** for you - it'll handle database setup, configuration, and deployment.
 
-**Step 4:** After testing locally, **host it on Vercel for free** - it's a Next.js app so deployment is one-click.
+**Step 4:** After testing locally, **host it on Vercel for free** - it's a Next.js app so deployment is one-click. OH OH OH! You'll need to add the envs to your vercel project as well, otherwise it wont work.
 
 That's it! Your AI assistant will handle the technical setup while you focus on customizing your domain and uploading media.
 
