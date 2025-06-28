@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
     const { key } = await request.json()
 
     // Get the access key from environment variable
-    const validKey = process.env.ACCESS_KEY || "ur_mom69"
+    const validKey = process.env.ACCESS_KEY
 
     // Check if the provided key matches
     const isValid = key === validKey

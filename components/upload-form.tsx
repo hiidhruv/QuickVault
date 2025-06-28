@@ -51,6 +51,7 @@ export function UploadForm() {
   const [isUploading, setIsUploading] = useState(false)
   const [directUpload, setDirectUpload] = useState(false)
   const [userCategories, setUserCategories] = useState<string[]>([])
+  const [isDragOver, setIsDragOver] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -68,10 +69,8 @@ export function UploadForm() {
     fetchCategories()
   }, [])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
-
+  // Extracted file processing logic to reuse for both file input and drop
+  const processFile = (selectedFile: File) => {
     // Check if file is a supported media type
     const isImage = SUPPORTED_IMAGE_TYPES.includes(selectedFile.type) || selectedFile.type.startsWith("image/")
     const isVideo = SUPPORTED_VIDEO_TYPES.includes(selectedFile.type) || selectedFile.type.startsWith("video/")
@@ -82,7 +81,7 @@ export function UploadForm() {
         description: "Please select an image or video file",
         variant: "destructive",
       })
-      return
+      return false
     }
 
     // Set file type for UI rendering
@@ -114,6 +113,59 @@ export function UploadForm() {
       setPreview(e.target?.result as string)
     }
     reader.readAsDataURL(selectedFile)
+    
+    return true
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
+    processFile(selectedFile)
+  }
+
+  // Drag and drop event handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Only set drag over to false if we're leaving the drop zone entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Ensure we show the copy cursor
+    e.dataTransfer.dropEffect = 'copy'
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length === 0) return
+
+    // Only handle the first file
+    const droppedFile = files[0]
+    
+    if (files.length > 1) {
+      toast({
+        title: "Multiple files detected",
+        description: "Please drop only one file at a time. Using the first file.",
+        variant: "default",
+      })
+    }
+
+    processFile(droppedFile)
   }
 
   const clearFile = () => {
@@ -309,19 +361,35 @@ export function UploadForm() {
   return (
     <div className="space-y-6">
       {!file ? (
-        <Card className="border-dashed">
+        <Card className={`border-dashed transition-colors duration-200 ${
+          isDragOver 
+            ? 'border-primary bg-primary/5 border-2' 
+            : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+        }`}>
           <CardContent className="pt-6">
             <div
-              className="flex flex-col items-center justify-center p-8 text-center cursor-pointer"
+              className={`flex flex-col items-center justify-center p-8 text-center cursor-pointer transition-all duration-200 ${
+                isDragOver ? 'scale-105' : ''
+              }`}
               onClick={() => document.getElementById("file-upload")?.click()}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
             >
-              <Upload className="h-10 w-10 text-muted-foreground mb-4" />
-              <h3 className="font-medium text-lg mb-2">Drag & drop or click to upload</h3>
+              <Upload className={`h-10 w-10 mb-4 transition-colors duration-200 ${
+                isDragOver ? 'text-primary' : 'text-muted-foreground'
+              }`} />
+              <h3 className={`font-medium text-lg mb-2 transition-colors duration-200 ${
+                isDragOver ? 'text-primary' : ''
+              }`}>
+                {isDragOver ? 'Drop your file here!' : 'Drag & drop or click to upload'}
+              </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Supports images (JPG, PNG, GIF, WEBP) and videos (MP4, WEBM, MOV, AVI) - max 4.5MB for automatic upload
               </p>
-              <Button type="button" variant="outline">
-                Select Media
+              <Button type="button" variant={isDragOver ? "default" : "outline"} className="transition-all duration-200">
+                {isDragOver ? 'Drop File' : 'Select Media'}
               </Button>
               <input 
                 id="file-upload" 

@@ -21,7 +21,6 @@ export const metadata: Metadata = {
     icon: "https://img.intercomm.in/v6q4or.png",
     apple: "https://img.intercomm.in/v6q4or.png",
   },
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({

@@ -13,7 +13,11 @@ import { Loader2 } from "lucide-react"
 
 const STORAGE_KEY = "imgur_lite_access"
 
-export function KeyVerification() {
+interface KeyVerificationProps {
+  onAccessGranted?: () => void
+}
+
+export function KeyVerification({ onAccessGranted }: KeyVerificationProps) {
   const [key, setKey] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const { toast } = useToast()
@@ -23,9 +27,9 @@ export function KeyVerification() {
     // Check if already verified
     const hasAccess = localStorage.getItem(STORAGE_KEY) === "true"
     if (hasAccess) {
-      router.refresh()
+      onAccessGranted?.()
     }
-  }, [router])
+  }, [onAccessGranted])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,11 +50,17 @@ export function KeyVerification() {
       if (data.success) {
         // Store access in localStorage
         localStorage.setItem(STORAGE_KEY, "true")
+        
         toast({
           title: "Access granted",
           description: "Welcome to IHP",
         })
-        router.refresh()
+
+        // Dispatch custom event to notify AccessCheck
+        window.dispatchEvent(new CustomEvent('accessGranted'))
+        
+        // Call the callback to immediately update parent state
+        onAccessGranted?.()
       } else {
         toast({
           title: "Access denied",

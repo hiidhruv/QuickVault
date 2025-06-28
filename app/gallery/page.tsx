@@ -10,8 +10,8 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient<Database>(supabaseUrl, supabaseKey)
 
 export const metadata = {
-  title: "Gallery - IHP",
-  description: "Browse and discover images and videos from our community",
+  title: "Gallery",
+  description: "Browse and discover images and videos from your vault",
 }
 
 export const revalidate = 0 // Allow fresh data from database
