@@ -13,50 +13,36 @@ You can use it to host **images and videos** and get their direct share/embed li
 <details>
 <summary><strong>🎯 Click to View App Screenshots & Features</strong></summary>
 
-### 🏠 Main Dashboard & Gallery
-Beautiful, responsive gallery view with search and filtering capabilities.
+### Login
+![Login](https://github.com/user-attachments/assets/e77e8d47-4f62-446f-a654-c4cd2f6efe86)
 
-![Main Dashboard](https://github.com/user-attachments/assets/e77e8d47-4f62-446f-a654-c4cd2f6efe86)
+### Home
+![Home](https://github.com/user-attachments/assets/29a121f8-94a4-4895-be60-89dde4e5749f)
 
-### ⬆️ Upload Interface
-Drag & drop upload with support for multiple file formats and automatic categorization.
+### Upload page
+![upload](https://github.com/user-attachments/assets/4c66a201-4303-40cb-a321-fc2131e07fea)
 
-![Upload Interface](https://github.com/user-attachments/assets/29a121f8-94a4-4895-be60-89dde4e5749f)
+### Page/content
+![Media](https://github.com/user-attachments/assets/34331205-35a9-4d15-90f3-6422fdc5de1e)
 
-### 🔗 URL Masking & Direct Links
-Clean, professional URLs using your custom domain instead of storage provider URLs.
+### Home/recents
+![recents](https://github.com/user-attachments/assets/a55ec9c5-822f-422b-bdf0-f5f0615112d5)
 
-![URL Masking](https://github.com/user-attachments/assets/4c66a201-4303-40cb-a321-fc2131e07fea)
+### Gallery
+![gallery](https://github.com/user-attachments/assets/992f2ecb-3782-4972-ac4a-7730c63b7fb7)
 
-### 📂 Category Management
-Organize your media with custom categories and powerful filtering options.
+### Category filtering
+![category](https://github.com/user-attachments/assets/58137438-19f2-496f-b397-cda6db921703)
 
-![Category Management](https://github.com/user-attachments/assets/34331205-35a9-4d15-90f3-6422fdc5de1e)
+### Search
+![search](https://github.com/user-attachments/assets/b5bd50a3-f931-4c9c-96ef-ef24ee279fbb)
 
-### 🖼️ Image Details & Actions
-Comprehensive image management with edit, delete, and sharing options.
+### Phone view
+![Phone](https://github.com/user-attachments/assets/6a7fae4e-f2a8-4b88-97ae-643e7d0b5689)
 
-![Image Details](https://github.com/user-attachments/assets/a55ec9c5-822f-422b-bdf0-f5f0615112d5)
+### Dark mode
+![dark](https://github.com/user-attachments/assets/e45d3998-4ad4-439c-a2a4-adecb5b9ab95)
 
-### 🔍 Search & Filter System
-Advanced search functionality with real-time filtering and category selection.
-
-![Search System](https://github.com/user-attachments/assets/992f2ecb-3782-4972-ac4a-7730c63b7fb7)
-
-### 📱 Mobile Responsive Design
-Fully optimized mobile experience with touch-friendly interfaces.
-
-![Mobile Design](https://github.com/user-attachments/assets/58137438-19f2-496f-b397-cda6db921703)
-
-### ⚙️ Settings & Configuration
-Easy setup and configuration options for customizing your image hosting experience.
-
-![Settings](https://github.com/user-attachments/assets/b5bd50a3-f931-4c9c-96ef-ef24ee279fbb)
-
-### 🎨 Theme & UI Customization
-Dark/light theme support with modern, clean interface design.
-
-![Theme Customization](https://github.com/user-attachments/assets/6a7fae4e-f2a8-4b88-97ae-643e7d0b5689)
 
 </details>
 
