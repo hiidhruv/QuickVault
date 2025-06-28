@@ -44,16 +44,23 @@ That's it! Your AI assistant will handle the technical setup while you focus on 
 Create a `.env.local` file in the root directory:
 
 ```env
-# Supabase Configuration
+# Supabase Configuration (REQUIRED)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Optional: Access Control
-NEXT_PUBLIC_ACCESS_KEY=your_custom_passkey
+# Access Control (REQUIRED - server-side only, private)
+ACCESS_KEY=your_custom_passkey
 
-# Optional: Custom Domain (for URL masking)
-NEXT_PUBLIC_CUSTOM_DOMAIN=https://i.yourdomain.com
+# Optional: Site URL  
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
 ```
+
+**⚠️ Note**: If you have other environment variables in your `.env.local` (like `POSTGRES_*`, `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, etc.), they're **not used by this codebase**. You might have them from:
+- Supabase CLI auto-generation
+- Different project templates  
+- Other apps in the same folder
+
+**Only the 3 variables above are actually needed for this image hosting app.**
 
 ### Database Schema
 Run this SQL in your Supabase SQL editor:
@@ -152,7 +159,10 @@ export function maskCatboxUrl(catboxUrl: string): string {
 
 #### Vercel (Recommended)
 1. **Connect Repository**: Link your GitHub repo to Vercel
-2. **Environment Variables**: Add all `.env.local` variables in Vercel dashboard
+2. **Environment Variables**: Add only these 3 variables in Vercel dashboard:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` 
+   - `ACCESS_KEY` (server-side private)
 3. **Custom Domain**: Configure your custom domain in Vercel settings
 4. **Deploy**: Automatic deployment on push to main branch
 
