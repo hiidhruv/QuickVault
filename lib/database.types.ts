@@ -56,6 +56,58 @@ export interface Database {
           view_count?: number | null
         }
       }
+      albums: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          share_code: string
+          is_public: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          share_code: string
+          is_public?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          share_code?: string
+          is_public?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      album_images: {
+        Row: {
+          id: string
+          album_id: string
+          image_id: string
+          order_index: number | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          album_id: string
+          image_id: string
+          order_index?: number | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          album_id?: string
+          image_id?: string
+          order_index?: number | null
+          created_at?: string | null
+        }
+      }
       image_views: {
         Row: {
           id: string

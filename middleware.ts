@@ -20,6 +20,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
+  // For public album routes, allow access without verification
+  if (req.nextUrl.pathname.startsWith("/album/")) {
+    return NextResponse.next()
+  }
+
   // For root-level image proxy routes (e.g., /image.jpg), allow access without verification
   if (req.nextUrl.pathname.match(/^\/[^/]+\.(jpg|jpeg|png|gif|webp)$/i)) {
     return NextResponse.next()
@@ -35,5 +40,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/images/:path*", "/embed/:path*", "/:path*"],
+  matcher: ["/api/images/:path*", "/embed/:path*", "/album/:path*", "/:path*"],
 }

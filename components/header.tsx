@@ -41,6 +41,12 @@ export function Header() {
               >
                 Gallery
               </Link>
+              <Link
+                href="/albums"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                Albums
+              </Link>
             </nav>
           </div>
           

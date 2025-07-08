@@ -137,22 +137,73 @@ create table images (
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
+-- Create albums table
+create table albums (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  description text,
+  share_code text unique not null,
+  is_public boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- Create album_images junction table
+create table album_images (
+  id uuid default gen_random_uuid() primary key,
+  album_id uuid references albums(id) on delete cascade,
+  image_id uuid references images(id) on delete cascade,
+  order_index integer default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  unique(album_id, image_id)
+);
+
 -- Enable Row Level Security (optional)
 alter table images enable row level security;
+alter table albums enable row level security;
+alter table album_images enable row level security;
 
--- Create policy to allow public read access
+-- Create policy to allow public read access for images
 create policy "Public read access" on images
   for select using (is_public = true);
 
--- Create policy to allow authenticated insert
+-- Create policy to allow public read access for albums (via share_code)
+create policy "Public album read access" on albums
+  for select using (is_public = true);
+
+-- Create policy to allow public read access for album_images (via album)
+create policy "Public album_images read access" on album_images
+  for select using (
+    exists (
+      select 1 from albums 
+      where albums.id = album_images.album_id 
+      and albums.is_public = true
+    )
+  );
+
+-- Create policies for authenticated operations
 create policy "Authenticated insert" on images
   for insert with check (true);
 
--- Create policy to allow authenticated update/delete
 create policy "Authenticated update" on images
   for update using (true);
 
 create policy "Authenticated delete" on images
+  for delete using (true);
+
+create policy "Authenticated album insert" on albums
+  for insert with check (true);
+
+create policy "Authenticated album update" on albums
+  for update using (true);
+
+create policy "Authenticated album delete" on albums
+  for delete using (true);
+
+create policy "Authenticated album_images insert" on album_images
+  for insert with check (true);
+
+create policy "Authenticated album_images delete" on album_images
   for delete using (true);
 ```
 

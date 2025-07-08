@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
     const title = formData.get("title") as string
     const description = formData.get("description") as string
     const category = formData.get("category") as string
+    const albumId = formData.get("albumId") as string | null
 
     let storagePath: string
     let publicUrl: string
@@ -194,11 +195,48 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Media stored in database:", mediaRecord)
+
+    // If albumId is provided, add the image to the album
+    if (albumId) {
+      try {
+        // Get current max order_index for this album
+        const { data: maxOrderData } = await supabase
+          .from('album_images')
+          .select('order_index')
+          .eq('album_id', albumId)
+          .order('order_index', { ascending: false })
+          .limit(1)
+
+        const nextOrderIndex = (maxOrderData?.[0]?.order_index || 0) + 1
+
+        // Add image to album
+        const { error: albumError } = await supabase
+          .from('album_images')
+          .insert({
+            album_id: albumId,
+            image_id: mediaRecord.id,
+            order_index: nextOrderIndex
+          })
+
+        if (albumError) {
+          console.error("Error adding image to album:", albumError)
+          // Don't fail the upload, just log the error
+        } else {
+          console.log("Image added to album:", albumId)
+        }
+      } catch (albumError) {
+        console.error("Error adding image to album:", albumError)
+        // Don't fail the upload, just log the error
+      }
+    }
     
     return NextResponse.json({ 
       success: true, 
       media: mediaRecord,
-      note: "Successfully stored in database - accessible from anywhere!"
+      addedToAlbum: !!albumId,
+      note: albumId 
+        ? "Successfully stored in database and added to album!" 
+        : "Successfully stored in database - accessible from anywhere!"
     })
   } catch (error) {
     console.error("Server error:", error)

@@ -1,13 +1,9 @@
 import type React from "react"
-import "./globals.css"
-import type { Metadata, Viewport } from "next"
-import Link from "next/link"
 import { GeistMono } from "geist/font/mono"
 import { Cherry_Bomb_One } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { Header } from "@/components/header"
-import { ConditionalAccessCheck } from "@/components/conditional-access-check"
+import "../globals.css"
 
 const cherryBomb = Cherry_Bomb_One({
   weight: "400",
@@ -15,26 +11,7 @@ const cherryBomb = Cherry_Bomb_One({
   variable: "--font-cherry-bomb",
 })
 
-export const metadata: Metadata = {
-  title: "QV - QuickVault",
-  description: "A simple media hosting and sharing platform",
-  icons: {
-    icon: "https://img.intercomm.in/v6q4or.png",
-    apple: "https://img.intercomm.in/v6q4or.png",
-  },
-}
-
-// Modern Next.js viewport configuration
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
-  ],
-}
-
-export default function RootLayout({
+export default function AlbumLayout({
   children,
 }: {
   children: React.ReactNode
@@ -48,12 +25,11 @@ export default function RootLayout({
       </head>
       <body className={`${GeistMono.className} ${cherryBomb.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <ConditionalAccessCheck>
-            {children}
-          </ConditionalAccessCheck>
+          {/* No AccessCheck wrapper - public albums don't need authentication */}
+          {children}
           <Toaster />
         </ThemeProvider>
       </body>
     </html>
   )
-}
+} 
